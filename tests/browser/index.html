@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Hello markdown-it!</title>
+  <link rel="stylesheet" href="./railroad-diagrams.css">
+</head>
+
+<body>
+
+  <textarea id="markdown-mermaid" style="width: 50%;height: 15em;">
+```mermaid
+gantt
+section Section
+Completed :done,    des1, 2014-01-06,2014-01-08
+Active        :active,  des2, 2014-01-07, 3d
+Parallel 1   :         des3, after des1, 1d
+Parallel 2   :         des4, after des1, 1d
+Parallel 3   :         des5, after des3, 1d
+Parallel 4   :         des6, after des4, 1d
+```
+    </textarea>
+
+  <textarea id="markdown-railroad" style="width: 50%;height: 15em;">
+```railroad
+Diagram(
+  Optional('+', 'skip'),
+  Choice(0,
+    NonTerminal('name-start char'),
+    NonTerminal('escape')),
+  ZeroOrMore(
+    Choice(0,
+      NonTerminal('name char'),
+      NonTerminal('escape'))))
+```
+  </textarea>
+
+  <div id="dest-mermaid"></div>
+
+  <div id="dest-railroad"></div>
+
+  <script src="./bootstrap.js"></script>
+
+</body>
+
+</html>
