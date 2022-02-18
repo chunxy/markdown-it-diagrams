@@ -11,8 +11,56 @@ export default function diagramsPlugin(md: MarkdownIt, options?: any): void {
 
   const { Diagram, ComplexDiagram, Sequence, Choice, Optional,
     OneOrMore, ZeroOrMore, Terminal, NonTerminal, Comment, Skip } = rr
+  const railroadCSS = `
+svg {
+  background-color: hsl(30,20%,95%);
+}
+path {
+  stroke-width: 3;
+  stroke: black;
+  fill: rgba(0,0,0,0);
+}
+text {
+  font: bold 14px monospace;
+  text-anchor: middle;
+  white-space: pre;
+}
+text.diagram-text {
+  font-size: 12px;
+}
+text.diagram-arrow {
+  font-size: 16px;
+}
+text.label {
+  text-anchor: start;
+}
+text.comment {
+  font: italic 12px monospace;
+}
+g.non-terminal text {
+  /*font-style: italic;*/
+}
+rect {
+  stroke-width: 3;
+  stroke: black;
+  fill: hsl(120,100%,90%);
+}
+rect.group-box {
+  stroke: gray;
+  stroke-dasharray: 10 5;
+  fill: none;
+}
+path.diagram-text {
+  stroke-width: 3;
+  stroke: black;
+  fill: white;
+  cursor: help;
+}
+g.diagram-text:hover path.diagram-text {
+  fill: #eee;
+}`;
 
-  function customFenceRenderer(tokens: Token[], idx: number, options: MarkdownIt.Options, env: any, self: Renderer) {
+  function customFenceRule(tokens: Token[], idx: number, options: MarkdownIt.Options, env: any, self: Renderer) {
     let token = tokens[idx];
     let info = token.info.trim();
     let langName = info ? info.split(/\s+/g)[0] : "";
@@ -34,17 +82,8 @@ export default function diagramsPlugin(md: MarkdownIt, options?: any): void {
             if (svg !== null) {
               imageAttrs.push(["style", `max-width:${svg.style.maxWidth};max-height:${svg.style.maxHeight}`]);
             }
-            // Store HTML
             imageHTML = html;
           });
-          // If we have an image, let's render it, otherwise return blank img tag
-          if (imageHTML.length) {
-            // Store encoded image data
-            imageAttrs.push(["src", `data:image/svg+xml,${encodeURIComponent(imageHTML)}`]);
-            token.attrs = imageAttrs;
-            return `<img ${self.renderAttrs(token)}>`;
-          }
-          return "<img>"
         } catch (e: any) {
           console.log(`Error in running Mermaid.mermaidAPI.render: ${e}`);
           return `<div class="alert alert-warning">${e.str}</div>`;
@@ -55,19 +94,31 @@ export default function diagramsPlugin(md: MarkdownIt, options?: any): void {
       }
       case "railroad": {
         try {
-          imageHTML = eval(token.content).toString()
+          let svg: Element = eval(token.content).toSVG()
+
+          svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+          let style = svg.appendChild(document.createElement("style"));
+          style.innerHTML = railroadCSS;
+          svg.appendChild(style);
+          imageHTML = svg.outerHTML;
         } catch (e: any) {
           console.log(`Error in eval-ing railroad definition: ${e}`);
           return `<div class="alert alert-warning">${e.str}</div>`;
         }
-        return imageHTML
+        break;
       }
       default: {
         return defaultFenceRule!(tokens, idx, options, env, self);
       }
-
     }
+    // If we have an image, render it, otherwise return blank img tag
+    if (imageHTML.length) {
+      imageAttrs.push(["src", `data:image/svg+xml,${encodeURIComponent(imageHTML)}`]);
+      token.attrs = imageAttrs;
+      return `<img ${self.renderAttrs(token)}>`;
+    }
+    else { return "<img>"; }
   }
 
-  md.renderer.rules.fence = customFenceRenderer;
+  md.renderer.rules.fence = customFenceRule;
 }
