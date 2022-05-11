@@ -69,7 +69,7 @@ g.diagram-text:hover path.diagram-text {
 
     // Only handle custom token
     switch (langName) {
-      case "mermaid": {
+      case "{mermaid}": {
         const element = document.createElement("div");
         document.body.appendChild(element);
 
@@ -92,7 +92,7 @@ g.diagram-text:hover path.diagram-text {
         }
         break;
       }
-      case "railroad": {
+      case "{railroad}": {
         try {
           let svg: Element = eval(token.content).toSVG()
 
